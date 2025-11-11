@@ -50,6 +50,43 @@ PolicyLossFn = Callable[
 POLICY_LOSS_REGISTRY: dict[str, PolicyLossFn] = {}
 
 
+def get_global_entropy_top_mask(entropy, response_mask, top_ratio=0.2):
+    """
+    Select the top `top_ratio` high-entropy tokens among all response tokens in a batch.
+    
+    Args:
+        entropy: [B, S] tensor of token entropies.
+        response_mask: [B, S] tensor (1 = response token, 0 = non-response).
+        top_ratio: fraction of response tokens to keep (e.g. 0.2 = top 20%).
+        
+    Returns:
+        entropy_top_mask: [B, S] binary mask (1 = selected top entropy token)
+    """
+    
+    # Flatten
+    flat_entropy = entropy.flatten()
+    flat_mask = response_mask.flatten()
+    
+    # Filter response token
+    response_entropy = flat_entropy[flat_mask]
+    if response_entropy.numel() == 0:
+        return torch.zeros_like(entropy, dtype=torch.long)
+
+    # Top-k selection
+    top_k = max(1, int(len(response_entropy) * top_ratio + 0.9999)) # ceil
+    _, topk_idx = torch.topk(response_entropy, k=top_k)
+    
+    # Map back to original flat indices
+    response_positions = flat_mask.nonzero(as_tuple=False).squeeze(1)
+    top_positions = response_positions[topk_idx]
+    
+    # Build mask
+    flat_out = torch.zeros_like(flat_entropy, dtype=torch.long)
+    flat_out[top_positions] = 1
+    
+    return flat_out.view_as(entropy)  
+
+
 def register_policy_loss(name: str) -> Callable[[PolicyLossFn], PolicyLossFn]:
     """Register a policy loss function with the given name.
 
@@ -890,6 +927,7 @@ def compute_policy_loss_vanilla(
     loss_agg_mode: str = "token-mean",
     config: Optional[DictConfig | AlgoConfig] = None,
     rollout_is_weights: torch.Tensor | None = None,
+    entropy_top_mask: torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Compute the clipped policy objective and related metrics for PPO.
@@ -963,7 +1001,10 @@ def compute_policy_loss_vanilla(
     if rollout_is_weights is not None:
         pg_losses = pg_losses * rollout_is_weights
 
-    pg_loss = agg_loss(loss_mat=pg_losses, loss_mask=response_mask, loss_agg_mode=loss_agg_mode)
+    if entropy_top_mask is None:
+        pg_loss = agg_loss(loss_mat=pg_losses, loss_mask=response_mask, loss_agg_mode=loss_agg_mode)
+    else:
+        pg_loss = agg_loss(loss_mat=pg_losses, loss_mask=response_mask * entropy_top_mask, loss_agg_mode=loss_agg_mode)
 
     return pg_loss, pg_clipfrac, ppo_kl, pg_clipfrac_lower
 

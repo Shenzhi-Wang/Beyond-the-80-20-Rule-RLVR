@@ -27,15 +27,29 @@ from torch.distributed.tensor import DTensor
 
 import verl.utils.torch_functional as verl_F
 from verl import DataProto
-from verl.trainer.ppo.core_algos import agg_loss, get_policy_loss_fn, kl_penalty
-from verl.utils.attention_utils import index_first_axis, pad_input, rearrange, unpad_input
+from verl.trainer.ppo.core_algos import (
+    agg_loss,
+    get_global_entropy_top_mask,
+    get_policy_loss_fn,
+    kl_penalty,
+)
+from verl.utils.attention_utils import (
+    index_first_axis,
+    pad_input,
+    rearrange,
+    unpad_input,
+)
 from verl.utils.device import get_device_id, get_device_name
 from verl.utils.fsdp_utils import FSDPModule, fsdp2_clip_grad_norm_
 from verl.utils.profiler import GPUMemoryLogger
 from verl.utils.py_functional import append_to_dict
 from verl.utils.seqlen_balancing import prepare_dynamic_batch, restore_dynamic_batch
 from verl.utils.torch_functional import logprobs_from_logits
-from verl.utils.ulysses import gather_outputs_and_unpad, ulysses_pad, ulysses_pad_and_slice_inputs
+from verl.utils.ulysses import (
+    gather_outputs_and_unpad,
+    ulysses_pad,
+    ulysses_pad_and_slice_inputs,
+)
 from verl.workers.actor import BasePPOActor
 from verl.workers.config import ActorConfig
 
@@ -126,7 +140,9 @@ class DataParallelPPOActor(BasePPOActor):
                     ).transpose(0, 1)
 
                 if "image_bound" in multi_modal_inputs:
-                    from verl.utils.dataset.vision_utils import process_multi_modal_inputs_for_minicpmo
+                    from verl.utils.dataset.vision_utils import (
+                        process_multi_modal_inputs_for_minicpmo,
+                    )
 
                     multi_modal_inputs = process_multi_modal_inputs_for_minicpmo(
                         input_ids, attention_mask, position_ids, cu_seqlens, multi_modal_inputs
@@ -421,7 +437,11 @@ class DataParallelPPOActor(BasePPOActor):
 
                     # all return: (bsz, response_length)
                     calculate_entropy = False
-                    if entropy_coeff != 0:
+                    entropy_top_ratio = self.config.get('entropy_top_ratio', None)
+                    if entropy_top_ratio is not None and not (0 <= entropy_top_ratio <= 1):
+                        raise ValueError(f"Invalid {entropy_top_ratio=}")
+                    
+                    if entropy_coeff != 0 or entropy_top_ratio is not None:
                         calculate_entropy = True
                     entropy, log_prob = self._forward_micro_batch(
                         model_inputs, temperature=temperature, calculate_entropy=calculate_entropy
@@ -435,6 +455,10 @@ class DataParallelPPOActor(BasePPOActor):
                             old_log_prob = log_prob.detach()
                         else:
                             old_log_prob = model_inputs["old_log_probs"]
+                    
+                    entropy_top_mask = None
+                    if entropy_top_ratio is not None:
+                        entropy_top_mask = get_global_entropy_top_mask(entropy=entropy, response_mask=response_mask, top_ratio=entropy_top_ratio)
 
                     loss_mode = self.config.policy_loss.get("loss_mode", "vanilla")
                     # vanilla -> verl.trainer.ppo.core_algos.compute_policy_loss_vanilla
@@ -461,6 +485,7 @@ class DataParallelPPOActor(BasePPOActor):
                         loss_agg_mode=loss_agg_mode,
                         config=self.config,
                         rollout_is_weights=rollout_is_weights,
+                        entropy_top_mask=entropy_top_mask,
                     )
 
                     if entropy_coeff != 0:
