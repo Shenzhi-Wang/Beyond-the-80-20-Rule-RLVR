@@ -132,4 +132,4 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     trainer.total_epochs=1 \
     trainer.default_local_dir="${CKPTS_DIR}" \
     trainer.resume_mode=auto \
-    +actor_rollout_ref.model.entropy_top_ratio=0.2  # We add an additional hyperparameter `entropy_top_ratio` here
+    actor_rollout_ref.model.entropy_top_ratio=0.2  # We add an additional hyperparameter `entropy_top_ratio` here

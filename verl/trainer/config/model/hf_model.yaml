@@ -62,3 +62,6 @@ fused_kernel_options:
 
   # the implementation backend for fused kernels.
   impl_backend: torch
+
+# Added for "Beyond the 80/20 Rule" paper
+entropy_top_ratio: null

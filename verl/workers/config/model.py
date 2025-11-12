@@ -73,6 +73,9 @@ class HFModelConfig(BaseConfig):
     enable_activation_offload: bool = False
 
     use_remove_padding: bool = False
+    
+    # Added for "Beyond the 80/20 Rule" paper
+    entropy_top_ratio: Optional[float] = None
 
     # lora related. We may setup a separate config later
     lora_rank: int = 0
