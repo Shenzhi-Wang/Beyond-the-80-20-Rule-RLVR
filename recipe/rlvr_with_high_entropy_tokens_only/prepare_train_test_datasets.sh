@@ -16,4 +16,4 @@ if [ ! -f "${TEST_FILE}" ] || [ "${OVERWRITE}" -eq 1 ]; then
   wget -O "${TEST_FILE}" "https://huggingface.co/datasets/BytedTsinghua-SIA/AIME-2024/resolve/main/data/aime-2024.parquet"
 fi
 
-python3 transfer_dataset.py --original_file_path "${TRAIN_FILE}" --save_file_path "${TRAIN_FILE}.new"
+python3 transfer_dataset.py --original_file_path "${TRAIN_FILE}" --save_file_path "${TRAIN_FILE}"
