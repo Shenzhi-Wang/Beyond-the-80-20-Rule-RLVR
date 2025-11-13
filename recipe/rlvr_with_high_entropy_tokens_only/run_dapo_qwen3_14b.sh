@@ -4,6 +4,9 @@
 
 set -xeuo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
 python3 -m pip install --upgrade wandb  # Used for the recommended docker image
 
 project_name='DAPO'
@@ -41,11 +44,13 @@ WORKING_DIR=${WORKING_DIR:-"${PWD}"}
 RUNTIME_ENV=${RUNTIME_ENV:-"${WORKING_DIR}/verl/trainer/runtime_env.yaml"}
 NNODES=${NNODES:-16}
 # Paths
-RAY_DATA_HOME=${RAY_DATA_HOME:-"${HOME}/verl"}
+RAY_DATA_HOME=${RAY_DATA_HOME:-"${PROJECT_ROOT}"}
 MODEL_PATH=${MODEL_PATH:-"${RAY_DATA_HOME}/models/Qwen3-14B-Base"}
 CKPTS_DIR=${CKPTS_DIR:-"${RAY_DATA_HOME}/ckpts/${project_name}/${exp_name}"}
 TRAIN_FILE=${TRAIN_FILE:-"${RAY_DATA_HOME}/data/math__combined_54.4k.parquet"}
-TEST_FILE=${TEST_FILE:-"${RAY_DATA_HOME}/data/aime-2024.parquet"}
+VAL_AIME_FILE=${VAL_AIME_FILE:-"${RAY_DATA_HOME}/data/math__aime_repeated_32x_960.parquet"}
+VAL_MATH500_FILE=${VAL_MATH500_FILE:-"${RAY_DATA_HOME}/data/math__math_500.parquet"}
+VAL_FILES=${VAL_FILES:-"['${VAL_AIME_FILE}', '${VAL_MATH500_FILE}']"}
 
 # Algorithm
 temperature=1.0
@@ -65,7 +70,7 @@ ray job submit --no-wait --runtime-env="${RUNTIME_ENV}" \
     --working-dir "${WORKING_DIR}" \
     -- python3 -m recipe.dapo.main_dapo \
     data.train_files="${TRAIN_FILE}" \
-    data.val_files="${TEST_FILE}" \
+    data.val_files="${VAL_FILES}" \
     data.prompt_key=prompt \
     data.truncation='left' \
     data.max_prompt_length=${max_prompt_length} \

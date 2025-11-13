@@ -45,6 +45,12 @@ def default_compute_score(
         from . import gsm8k
 
         res = gsm8k.compute_score(solution_str, ground_truth)
+    
+    elif data_source.startswith("math__"):  # Adapted from Reasoning360
+        from . import naive_dapo
+
+        res = naive_dapo.compute_score(solution_str, ground_truth)
+    
     elif data_source in ["lighteval/MATH", "DigitalLearningGmbH/MATH-lighteval", "HuggingFaceH4/MATH-500"]:
         from . import math_reward
 
@@ -56,10 +62,10 @@ def default_compute_score(
 
         # from . import math_verify
         # res = math_verify.compute_score(solution_str, ground_truth)
-    elif data_source in ["math_dapo", "math", "math_dapo_reasoning"] or data_source.startswith("aime") or data_source.startswith("math__"):
+    elif data_source in ["math_dapo", "math", "math_dapo_reasoning"] or data_source.startswith("aime"):
         from . import math_dapo
 
-        res = math_dapo.compute_score(solution_str, ground_truth)
+        res = math_dapo.compute_score(solution_str, ground_truth)   # This is the original DAPO reward function
     elif data_source in [
         "numina_aops_forum",
         "numina_synthetic_math",
