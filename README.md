@@ -3,6 +3,7 @@
 <div align="center">
 <a href="https://arxiv.org/abs/2506.01939"><img src="https://img.shields.io/static/v1?label=NeurIPS-2025&message=Arxiv&color=red"></a>
   <a href="https://shenzhi-wang.github.io/high-entropy-minority-tokens-rlvr/"><img src="https://img.shields.io/static/v1?label=Project-Page&message=Link&color=blue"></a>
+  <a href="https://api.wandb.ai/links/zhouxiangxin-university-of-chinese-academy-of-sciences/0ikhi10b"><img src="https://img.shields.io/static/v1?label=Wandb&message=Logs&color=yellow"></a>
 </div>
 
 <img src="img/qwen_leaplab_logo.jpg" style="zoom:50%;" />
