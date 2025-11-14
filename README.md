@@ -32,7 +32,7 @@ For the training dataset, we recommend using the [math dataset](https://huggingf
 
 For evaluation, we use the AIME24 and MATH500 benchmarks, duplicating the AIME split so that the AIME24 score reflects avg@32.
 
-The helper script [recipe/rlvr_with_high_entropy_tokens_only/prepare_train_test_datasets.sh](recipe/rlvr_with_high_entropy_tokens_only/prepare_train_test_datasets.sh) downloads the recommended training split, fetches the validation sets, and invokes [recipe/rlvr_with_high_entropy_tokens_only/duplicate_aime.sh](recipe/rlvr_with_high_entropy_tokens_only/duplicate_aime.sh) to materialize `data/math__aime_repeated_32x_960.parquet`. Both `data/math__aime_repeated_32x_960.parquet` and `data/math__math_500.parquet` are then referenced by the run scripts through `data.val_files`.
+The helper script [recipe/rlvr_with_high_entropy_tokens_only/prepare_train_test_datasets.sh](recipe/rlvr_with_high_entropy_tokens_only/prepare_train_test_datasets.sh) downloads the recommended training split, fetches the validation sets, filters the test datasets to keep only the required keys (`data_source`, `prompt`, `reward_model`, `extra_info`) using [recipe/rlvr_with_high_entropy_tokens_only/filter_test_dataset_keys.py](recipe/rlvr_with_high_entropy_tokens_only/filter_test_dataset_keys.py), and invokes [recipe/rlvr_with_high_entropy_tokens_only/duplicate_aime.sh](recipe/rlvr_with_high_entropy_tokens_only/duplicate_aime.sh) to materialize `data/math__aime_repeated_32x_960.parquet`. Both `data/math__aime_repeated_32x_960.parquet` and `data/math__math_500.parquet` are then referenced by the run scripts through `data.val_files`.
 
 ## Model Preparation
 

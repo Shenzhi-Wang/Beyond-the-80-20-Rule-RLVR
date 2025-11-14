@@ -28,5 +28,24 @@ if [[ ! -f "${MATH_500_TEST_FILE}" || "${OVERWRITE}" -eq 1 ]]; then
   wget -O "${MATH_500_TEST_FILE}" "https://huggingface.co/datasets/LLM360/guru-RL-92k/resolve/main/offline_eval/math__math_500.parquet"
 fi
 
+# Filter test datasets to keep only required keys
+FILTER_SCRIPT="${SCRIPT_DIR}/filter_test_dataset_keys.py"
+if [[ -f "${AIME_TEST_FILE}" ]]; then
+  echo "Filtering AIME test file..."
+  python3 "${FILTER_SCRIPT}" --input_file "${AIME_TEST_FILE}"
+fi
+
+if [[ -f "${MATH_500_TEST_FILE}" ]]; then
+  echo "Filtering MATH500 test file..."
+  python3 "${FILTER_SCRIPT}" --input_file "${MATH_500_TEST_FILE}"
+fi
+
 chmod +x "${SCRIPT_DIR}/duplicate_aime.sh"
 "${SCRIPT_DIR}/duplicate_aime.sh" "${AIME_TEST_FILE}" 4
+
+# Filter the duplicated AIME file as well
+AIME_DUPLICATED_FILE="${DATA_DIR}/math__aime_repeated_32x_960.parquet"
+if [[ -f "${AIME_DUPLICATED_FILE}" ]]; then
+  echo "Filtering duplicated AIME file..."
+  python3 "${FILTER_SCRIPT}" --input_file "${AIME_DUPLICATED_FILE}"
+fi
