@@ -478,9 +478,11 @@ def match_answer(response):
 import math
 
 
-def compute_score(solution_str: str,
-                  ground_truth: str,
-                  extra_info: dict) -> float:
+def compute_score(
+    solution_str: str,
+    ground_truth: str,
+    extra_info: dict = None,
+) -> float:
     """Compute the reward score for a solution. This draws heavily from the LLM-as-judge and PRIME reward functions
     
     Args:
