@@ -120,6 +120,8 @@ class ActorConfig(BaseConfig):
     data_loader_seed = 1
     rollout_n: int = 1  # must be override by sampling config
     model_config: HFModelConfig = field(default_factory=BaseConfig)
+    # Added for "Beyond the 80/20 Rule" paper to enable masking tokens with high entropy
+    entropy_top_ratio: Optional[float] = None
 
     def __post_init__(self):
         """Validate actor configuration parameters."""
