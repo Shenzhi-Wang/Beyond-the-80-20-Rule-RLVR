@@ -783,6 +783,11 @@ class ActorRolloutRefWorker(Worker, DistProfilerExtension):
                 log_gpu_memory_usage("After offload actor optimizer during init", logger=logger)
 
         if self._is_actor:
+            entropy_top_ratio = self.config.model.get("entropy_top_ratio", None)
+            if entropy_top_ratio is not None:
+                OmegaConf.set_struct(self.config.actor, False)
+                with open_dict(self.config.actor):
+                    self.config.actor.entropy_top_ratio = entropy_top_ratio
             actor_cfg = omega_conf_to_dataclass(self.config.actor)
             self.actor = DataParallelPPOActor(
                 config=actor_cfg, actor_module=self.actor_module_fsdp, actor_optimizer=self.actor_optimizer

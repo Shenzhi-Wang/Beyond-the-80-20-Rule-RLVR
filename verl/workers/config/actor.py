@@ -120,6 +120,8 @@ class ActorConfig(BaseConfig):
     data_loader_seed = 1
     rollout_n: int = 1  # must be override by sampling config
     model_config: HFModelConfig = field(default_factory=BaseConfig)
+    # Added for "Beyond the 80/20 Rule" paper to enable masking tokens with high entropy
+    entropy_top_ratio: Optional[float] = None
 
     # Added for "Beyond the 80/20 Rule" paper
     entropy_top_ratio: Optional[float] = None # fraction of response tokens to keep (e.g. 0.2 = top 20%)
